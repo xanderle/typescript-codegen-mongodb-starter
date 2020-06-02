@@ -11,7 +11,7 @@ import {
     PublishPostInput,
     User,
     UserDbObject,
-} from '../types';
+} from './graphql-types';
 import { mongoDbProvider } from '../database';
 
 const mockCurrentUserId = '0123456789abcdef01234567';

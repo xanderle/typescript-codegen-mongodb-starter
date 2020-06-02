@@ -1,4 +1,4 @@
-const typedefs = `scalar DateTime
+const typeDefs = `scalar DateTime
 scalar EmailAddress
 scalar UnsignedInt
 
@@ -133,4 +133,4 @@ type Mutation {
   ): UnsignedInt!
 }`
 
-export default typedefs
+export default typeDefs

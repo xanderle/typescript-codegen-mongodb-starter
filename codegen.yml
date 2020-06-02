@@ -1,9 +1,9 @@
-schema: ./src/graphql/schema.ts
+schema: ./src/graphql/typeDefs.ts
 
 require:
   - ts-node/register
 generates:
-  ./src/types.d.ts:
+  ./src/graphql/graphql-types.d.ts:
     plugins:
       - typescript
       - typescript-mongodb

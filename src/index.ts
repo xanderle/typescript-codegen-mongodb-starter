@@ -1,9 +1,7 @@
 import {resolvers} from "./graphql/resolvers";
-import {DateTimeMock, EmailAddressMock, UnsignedIntMock} from 'graphql-scalars';
+import {DateTimeMock, EmailAddressMock } from 'graphql-scalars';
 
 require('dotenv').config()
-
-import schema from './graphql/schema'
 
 const { ApolloServer } = require("apollo-server-express");
 
@@ -15,17 +13,16 @@ const morgan = require("morgan");
 const compression = require("compression");
 
 import { DIRECTIVES } from '@graphql-codegen/typescript-mongodb';
-
-import { MongoClient } from "mongodb";
 import {environment} from "./environment";
 import {addMockUsersAsync, mongoDbProvider} from "./database";
+import typeDefs from "./graphql/typeDefs";
 
 
 
 // defining the Express index
 const app = express();
 const server = new ApolloServer({
-    typeDefs: [DIRECTIVES,schema],
+    typeDefs: [DIRECTIVES,typeDefs],
     resolvers,
     introspection: environment.apollo.introspection,
     mockEntireSchema: false,
@@ -54,26 +51,12 @@ app.use(morgan("combined"));
 // adding compression to make things fast
 app.use(compression());
 
-// add main router
-// app.use("/api", BaseRouter);
-// starting the server
-
-
-// MongoClient.connect('mongodb://localhost:27017/animals').then(
-//     client => {
-//         const db = client.db('star-wars-quotes')
-//         const quotesCollection = db.collection('quotes')
-//         app.listen(3000, async ()  => {
-//             console.log(`listening on port 3000${server.graphqlPath}`);
-//         });
-//     }
-// )
 
 (async function bootstrapAsync(): Promise<void> {
     await mongoDbProvider.connectAsync(environment.mongoDb.databaseName);
     await addMockUsersAsync(); // TODO: Remove in PROD.
-        app.listen(3000, async ()  => {
-            console.log(`listening on port 3000${server.graphqlPath}`);
+        app.listen(environment.port, async ()  => {
+            console.log(`listening on port ${environment.port} ${server.graphqlPath}`);
         });
 
 
