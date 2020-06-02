@@ -8,5 +8,3 @@ generates:
       - typescript
       - typescript-mongodb
       - typescript-resolvers
-
-
