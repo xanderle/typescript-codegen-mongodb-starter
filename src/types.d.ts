@@ -1,5 +1,6 @@
-import { GraphQLResolveInfo } from 'graphql';
+import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 export type Maybe<T> = T | null;
+export type RequireFields<T, K extends keyof T> = { [X in Exclude<keyof T, K>]?: T[X] } & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -7,7 +8,13 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  DateTime: any;
+  EmailAddress: any;
+  UnsignedInt: any;
 };
+
+
+
 
 
 
@@ -19,14 +26,96 @@ export type Scalars = {
 
 export type User = {
   __typename?: 'User';
-  id: Scalars['Int'];
+  /** User ID. */
+  id: Scalars['ID'];
+  /** User's first name. */
   firstName: Scalars['String'];
+  /** User's last name. */
   lastName: Scalars['String'];
+  /** User's e-mail address. */
+  email?: Maybe<Scalars['EmailAddress']>;
+  /** Posts published by user. */
+  posts?: Maybe<Array<Maybe<Post>>>;
+  /** Users that this user is following. */
+  following?: Maybe<Array<Maybe<User>>>;
+  /** Users that this user is followed by. */
+  followers?: Maybe<Array<Maybe<User>>>;
+};
+
+export type Post = {
+  __typename?: 'Post';
+  /** Post ID. */
+  id: Scalars['ID'];
+  /** Post title. */
+  title: Scalars['String'];
+  /** Post content. */
+  content: Scalars['String'];
+  /** Post Author. */
+  author: User;
+  /** Post published timestamp. */
+  publishedAt?: Maybe<Scalars['DateTime']>;
+  /** Users who like this post. */
+  likedBy?: Maybe<Array<Maybe<User>>>;
 };
 
 export type Query = {
   __typename?: 'Query';
-  user?: Maybe<User>;
+  /** Get post by ID. */
+  post?: Maybe<Post>;
+};
+
+
+export type QueryPostArgs = {
+  id: Scalars['ID'];
+};
+
+/** Publish post input. */
+export type PublishPostInput = {
+  /** Post title. */
+  title: Scalars['String'];
+  /** Post content. */
+  content: Scalars['String'];
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  /** Publish post. */
+  publishPost: Post;
+  /**
+   * Follow user.
+   * Returns the updated number of followers.
+   */
+  followUser: Scalars['UnsignedInt'];
+  /**
+   * Unfollow user.
+   * Returns the updated number of followers.
+   */
+  unfollowUser: Scalars['UnsignedInt'];
+  /**
+   * Like post.
+   * Returns the updated number of likes received.
+   */
+  likePost: Scalars['UnsignedInt'];
+};
+
+
+export type MutationPublishPostArgs = {
+  input: PublishPostInput;
+};
+
+
+export type MutationFollowUserArgs = {
+  userId: Scalars['ID'];
+};
+
+
+export type MutationUnfollowUserArgs = {
+  userId: Scalars['ID'];
+};
+
+
+export type MutationLikePostArgs = {
+  postId: Scalars['ID'];
 };
 
 export type AdditionalEntityFields = {
@@ -39,10 +128,17 @@ export type UserDbObject = {
   _id: ObjectID,
   firstName: string,
   lastName: string,
+  email?: string,
+  following?: Maybe<Array<Maybe<UserDbObject['_id']>>>,
 };
 
-export type QueryDbObject = {
-  user?: Maybe<UserDbObject['_id']>,
+export type PostDbObject = {
+  _id: ObjectID,
+  title: string,
+  content: string,
+  author: UserDbObject['_id'],
+  publishedAt?: Date,
+  likedBy?: Maybe<Array<Maybe<UserDbObject['_id']>>>,
 };
 
 
@@ -120,9 +216,15 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   String: ResolverTypeWrapper<Scalars['String']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
+  DateTime: ResolverTypeWrapper<Scalars['DateTime']>;
+  EmailAddress: ResolverTypeWrapper<Scalars['EmailAddress']>;
+  UnsignedInt: ResolverTypeWrapper<Scalars['UnsignedInt']>;
   User: ResolverTypeWrapper<User>;
-  Int: ResolverTypeWrapper<Scalars['Int']>;
+  ID: ResolverTypeWrapper<Scalars['ID']>;
+  Post: ResolverTypeWrapper<Post>;
   Query: ResolverTypeWrapper<{}>;
+  PublishPostInput: PublishPostInput;
+  Mutation: ResolverTypeWrapper<{}>;
   AdditionalEntityFields: AdditionalEntityFields;
 };
 
@@ -130,9 +232,15 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   String: Scalars['String'];
   Boolean: Scalars['Boolean'];
+  DateTime: Scalars['DateTime'];
+  EmailAddress: Scalars['EmailAddress'];
+  UnsignedInt: Scalars['UnsignedInt'];
   User: User;
-  Int: Scalars['Int'];
+  ID: Scalars['ID'];
+  Post: Post;
   Query: {};
+  PublishPostInput: PublishPostInput;
+  Mutation: {};
   AdditionalEntityFields: AdditionalEntityFields;
 };
 
@@ -171,20 +279,58 @@ export type MapDirectiveArgs = {   path: Scalars['String']; };
 
 export type MapDirectiveResolver<Result, Parent, ContextType = any, Args = MapDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
+export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
+  name: 'DateTime';
+}
+
+export interface EmailAddressScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['EmailAddress'], any> {
+  name: 'EmailAddress';
+}
+
+export interface UnsignedIntScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['UnsignedInt'], any> {
+  name: 'UnsignedInt';
+}
+
 export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
-  id?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   firstName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   lastName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  email?: Resolver<Maybe<ResolversTypes['EmailAddress']>, ParentType, ContextType>;
+  posts?: Resolver<Maybe<Array<Maybe<ResolversTypes['Post']>>>, ParentType, ContextType>;
+  following?: Resolver<Maybe<Array<Maybe<ResolversTypes['User']>>>, ParentType, ContextType>;
+  followers?: Resolver<Maybe<Array<Maybe<ResolversTypes['User']>>>, ParentType, ContextType>;
+  __isTypeOf?: isTypeOfResolverFn<ParentType>;
+};
+
+export type PostResolvers<ContextType = any, ParentType extends ResolversParentTypes['Post'] = ResolversParentTypes['Post']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  content?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  author?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
+  publishedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
+  likedBy?: Resolver<Maybe<Array<Maybe<ResolversTypes['User']>>>, ParentType, ContextType>;
   __isTypeOf?: isTypeOfResolverFn<ParentType>;
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  post?: Resolver<Maybe<ResolversTypes['Post']>, ParentType, ContextType, RequireFields<QueryPostArgs, 'id'>>;
+};
+
+export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  publishPost?: Resolver<ResolversTypes['Post'], ParentType, ContextType, RequireFields<MutationPublishPostArgs, 'input'>>;
+  followUser?: Resolver<ResolversTypes['UnsignedInt'], ParentType, ContextType, RequireFields<MutationFollowUserArgs, 'userId'>>;
+  unfollowUser?: Resolver<ResolversTypes['UnsignedInt'], ParentType, ContextType, RequireFields<MutationUnfollowUserArgs, 'userId'>>;
+  likePost?: Resolver<ResolversTypes['UnsignedInt'], ParentType, ContextType, RequireFields<MutationLikePostArgs, 'postId'>>;
 };
 
 export type Resolvers<ContextType = any> = {
+  DateTime?: GraphQLScalarType;
+  EmailAddress?: GraphQLScalarType;
+  UnsignedInt?: GraphQLScalarType;
   User?: UserResolvers<ContextType>;
+  Post?: PostResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  Mutation?: MutationResolvers<ContextType>;
 };
 
 
